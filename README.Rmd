@@ -16,8 +16,6 @@ knitr::opts_chunk$set(
 # sieve
 
 <!-- badges: start -->
-[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
-[![CRAN status](https://www.r-pkg.org/badges/version/sieve)](https://CRAN.R-project.org/package=sieve)
 <!-- badges: end -->
 
 The goal of sieve is to ...
