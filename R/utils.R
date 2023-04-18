@@ -27,14 +27,22 @@ find_midpoint <- function(size) {
 
 # Prepare tibble
 prepare_tibble <- function(data, unit) {
+  abundance_sum <- sum(data$abundance)
+
   if (unit == "um") {
     data <- data |>
       dplyr::mutate(
         size_mm = size / 1000,
+        size_um = size,
         size_phi = convert_units(size_mm, unit = "um"),
+        abundance_g = abundance,
+        abundance_p = (abundance_g * 100) / abundance_sum,
+        cum_retained_p = cumsum(abundance_p),
         midpoint_mm = find_midpoint(size_mm),
+        midpoint_um = midpoint_mm * 1000,
         midpoint_phi = find_midpoint(size_phi),
-        .after = size_mm
+        .after = size_mm,
+        .keep = "none"
       )
 
     return(data)
@@ -43,9 +51,15 @@ prepare_tibble <- function(data, unit) {
       dplyr::mutate(
         size_phi = size,
         size_mm = convert_units(size_phi, unit = "phi"),
+        size_um = size_mm * 1000,
+        abundance_g = abundance,
+        abundance_p = (abundance_g * 100) / abundance_sum,
+        cum_retained_p = cumsum(abundance_p),
         midpoint_mm = find_midpoint(size_mm),
+        midpoint_um = midpoint_mm * 1000,
         midpoint_phi = find_midpoint(size_phi),
-        .after = size
+        .after = size,
+        .keep = "none"
       )
   }
   return(data)
