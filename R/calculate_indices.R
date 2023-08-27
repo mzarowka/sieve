@@ -110,13 +110,12 @@ calculate_indices_gmm <- function(data) {
     dplyr::mutate(dplyr::across(dplyr::everything(), \(x) round(x, digits = 3)))
 }
 
-#
 #' Calculate base size indices
 #'
 #' @param data a tibble prepared with \code{\link{prepare_tibble}}
 #' @param method one of arithmetic method of moments ("amm"), logarithmic method of moments ("lmm") or Geometric method of moments ("gmm") or all (default).
 #'
-#' @return a data frame with calculated indices
+#' @return a data frame with calculated indices.
 #' @export
 #'
 psa_calculate_indices <- function(data, method = "all") {
@@ -143,13 +142,24 @@ psa_calculate_indices <- function(data, method = "all") {
   }
 }
 
+#' Get all indices
+#'
+#' @param data nested data prepared with \code{\link{prepare_tibble}}
+#' @param method one of arithmetic method of moments ("amm"), logarithmic method of moments ("lmm") or Geometric method of moments ("gmm") or all (default).
+#'
+#' @return a data frame with calculated indices.
+#' @export
+#'
+#' @examples
 psa_get_indices <- function(data, method = "all"){
   # Check method
   if (!(method %in% c("all", "amm", "lmm", "gmm"))) {
     rlang::abort(cli::format_error("Method not recognized"))
   }
+
+  # Calculate indices
   indices <- data |>
-    # Calcualte indices
+    # Calculate indices
     dplyr::mutate(indices = purrr::map(data, \(x) psa_calculate_indices(x))) |>
     # Drop data
     dplyr::select(-data) |>

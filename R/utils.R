@@ -30,7 +30,7 @@ psa_convert_units <- function(size, unit) {
 #'
 #' @return a vector of midpoint sizes.
 #' @export
-find_midpoint <- function(size) {
+psa_find_midpoint <- function(size) {
   midpoint <- dplyr::lag(size + dplyr::lead(size)) / 2
 }
 
