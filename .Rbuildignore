@@ -4,7 +4,6 @@
 ^README\.Rmd$
 ^cran-comments\.md$
 ^\.github$
-^sieve\gradistat8.xlsm
 [.]xlsx$
 [.]xls$
 [.]xlsm$

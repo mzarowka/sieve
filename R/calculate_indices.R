@@ -25,11 +25,11 @@ calculate_indices_amm <- function(data) {
   m_4 <- (sum(fm4[fm4 > 0], na.rm = TRUE) + sum(fm4[fm4 < 0], na.rm = TRUE)) / ((100 * (m_2^4)))
 
   indices <- dplyr::tibble(
-    mean = m_1,
-    standard_deviation = m_2,
-    skewness = m_3,
-    kurtosis = m_4,
-    kurtosis_3 = m_4 - 3
+    mean_amm = m_1,
+    standard_deviation_amm = m_2,
+    skewness_amm = m_3,
+    kurtosis_amm = m_4,
+    kurtosis_3_amm = m_4 - 3
   ) |>
     dplyr::mutate(dplyr::across(dplyr::everything(), \(x) round(x, digits = 3)))
 }
@@ -63,10 +63,10 @@ calculate_indices_lmm <- function(data) {
   m_4 <- (sum(fm4[fm4 > 0], na.rm = TRUE) + sum(fm4[fm4 < 0], na.rm = TRUE)) / ((100 * (m_2^4)))
 
   indices <- dplyr::tibble(
-    mean = m_1,
-    standard_deviation = m_2,
-    skewness = m_3,
-    kurtosis = m_4,
+    mean_lmm = m_1,
+    standard_deviation_lmm = m_2,
+    skewness_lmm = m_3,
+    kurtosis_lmm = m_4,
   ) |>
     dplyr::mutate(dplyr::across(dplyr::everything(), \(x) round(x, digits = 3)))
 }
@@ -101,18 +101,36 @@ calculate_indices_gmm <- function(data) {
   m_4 <- (sum(fm4[fm4 > 0], na.rm = TRUE) + sum(fm4[fm4 < 0], na.rm = TRUE)) / (100 * (log10(m_2))^4)
 
   indices <- dplyr::tibble(
-    mean = m_1,
-    standard_deviation = m_2,
-    skewness = m_3,
-    kurtosis = m_4,
-    kurtosis_3 = m_4 - 3
+    mean_gmm = m_1,
+    standard_deviation_gmm = m_2,
+    skewness_gmm = m_3,
+    kurtosis_gmm = m_4,
+    kurtosis_3_gmm = m_4 - 3
   ) |>
     dplyr::mutate(dplyr::across(dplyr::everything(), \(x) round(x, digits = 3)))
 }
 
-# Calculate indices
-calculate_indices <- function(data, method) {
-  if (method == "amm") {
+#
+#' Calculate base size indices
+#'
+#' @param data a tibble prepared with \code{\link{prepare_tibble}}
+#' @param method one of arithmetic method of moments ("amm"), logarithmic method of moments ("lmm") or Geometric method of moments ("gmm") or all (default).
+#'
+#' @return a data frame with calculated indices
+#' @export
+#'
+calculate_indices <- function(data, method = "all") {
+  if (!(method %in% c("all", "amm", "lmm", "gmm"))) {
+    rlang::abort(cli::format_error("Method not recognized"))
+  } else if (method == "all") {
+    # Calculate indices by type
+    indices_amm <- calculate_indices_amm(data)
+    indices_lmm <- calculate_indices_lmm(data)
+    indices_gmm <- calculate_indices_gmm(data)
+
+    # Bind all types
+    indices <- dplyr::bind_cols(indices_amm, indices_lmm, indices_gmm)
+  } else if (method == "amm") {
     indices <- calculate_indices_amm(data)
   } else if (method == "gmm") {
     indices <- calculate_indices_gmm(data)
