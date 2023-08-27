@@ -1,13 +1,19 @@
-################################################################### Prepare data
-
-# #' Convert units between metric and phi
+#' Convert units between metric and phi
 #'
 #' @param size vector (numeric) of sizes.
 #' @param unit either "µm" or "phi" (character).
 #'
 #' @return a vector of converted sizes.
 #' @export
-convert_units <- function(size, unit) {
+psa_convert_units <- function(size, unit) {
+  if (!is.numeric(size)) {
+    rlang::abort(cli::format_error("Size is not numeric."))
+  }
+
+  if (!(unit %in% c("um", "phi"))) {
+    rlang::abort(cli::format_error("Size unit not recognized."))
+  }
+
   # Convert to phi
   if (unit == "um") {
     size_phi <- -log2(size)
@@ -28,55 +34,98 @@ find_midpoint <- function(size) {
   midpoint <- dplyr::lag(size + dplyr::lead(size)) / 2
 }
 
-# Check tibble: arrange, size as a first column, all numeric
-
-#' Prepare sieve tibble
+#' Prepare and nest particle size data
+#'
+#' Add secondary size unit, calculate midpoints and cumulative abundance. Size class must come in either µm or phi.
+#' All abundance data must come as percent (%).
 #'
 #' @param data a tibble with size and abundances.
-#' @param unit original unit of measurements. One of "um" or "phi".
+#' @param unit original unit of measurements. One of "um" (default) or "phi".
 #'
-#' @return a tibble prepared for further analyses with \pkg{sieve}.
+#' @return A nested tibble with data prepared for further analyses with \pkg{psa}.
 #' @export
-prepare_tibble <- function(data, unit) {
+#'
+#' @examples psa_prepare_data(multiple_sample, unit = "um")
+psa_prepare_data <- function(data, unit = "um") {
+  # Check size unit
   if (!(unit %in% c("um", "phi"))) {
-    rlang::abort(cli::format_error("Size unit not recognized"))
+    rlang::abort(cli::format_error("Size unit not recognized."))
   }
 
-  # Calculate sum
-  sample_sum <- sum(data$sample)
+  # Check if all data are numeric
+  if (!(all(sapply(data, FUN = is.numeric)))) {
+    rlang::abort(cli::format_error("There are non-numeric variables."))
+  }
 
   if (unit == "um") {
-    data <- data |>
+    # Calculate size variables
+    size <- data |>
       dplyr::mutate(
-        size_mm = size / 1000,
-        size_um = size,
-        size_phi = convert_units(size_mm, unit = "um"),
-        sample_g = sample,
-        sample_p = (sample_g * 100) / sample_sum,
-        cum_retained_p = cumsum(sample_p),
-        midpoint_mm = find_midpoint(size_mm),
-        midpoint_um = midpoint_mm * 1000,
-        midpoint_phi = find_midpoint(size_phi),
-        .after = size_mm,
+        size.mm = size / 1000,
+        size.um = size,
+        size.phi = psa_convert_units(size.mm, unit = "um"),
+        midpoint.mm = find_midpoint(size.mm),
+        midpoint.um = midpoint.mm * 1000,
+        midpoint.phi = find_midpoint(size.phi),
+        .after = size.mm,
         .keep = "none"
       )
 
+    # Keep only abundance data
+    sample <- data |>
+      # Select only sample
+      dplyr::select(-size)
+
+    # Bind back
+    data <- dplyr::bind_cols(size, sample) |>
+      # Arrange ascending
+      dplyr::arrange(size) |>
+      # Pivot longer
+      tidyr::pivot_longer(-c(contains("size"), contains("midpoint")),
+        names_to = "sample",
+        values_to = "abundance"
+      ) |>
+      # Nest by sample
+      tidyr::nest(.by = sample) |>
+      # Add cumulative abundance
+      dplyr::mutate(data = purrr::map(data, \(x) dplyr::mutate(x, dplyr::across(abundance, \(x) cumsum(x), .names = "{.col}_cum.p"))))
+
+    # Return data
     return(data)
   } else if (unit == "phi") {
-    data <- data |>
+    # Calculate size variables
+    size <- data |>
       dplyr::mutate(
-        size_phi = size,
-        size_mm = convert_units(size_phi, unit = "phi"),
-        size_um = size_mm * 1000,
-        sample_g = sample,
-        sample_p = (sample_g * 100) / sample_sum,
-        cum_retained_p = cumsum(sample_p),
-        midpoint_mm = find_midpoint(size_mm),
-        midpoint_um = midpoint_mm * 1000,
-        midpoint_phi = find_midpoint(size_phi),
+        size.phi = size,
+        size.mm = psa_convert_units(size.phi, unit = "phi"),
+        size.um = size.mm * 1000,
+        midpoint.mm = find_midpoint(size.mm),
+        midpoint.um = midpoint.mm * 1000,
+        midpoint.phi = find_midpoint(size.phi),
         .after = size,
         .keep = "none"
       )
+
+    # Keep only abundance data
+    sample <- data |>
+      # Select only sample
+      dplyr::select(-size)
+
+    # Bind back
+    data <- dplyr::bind_cols(size, sample) |>
+      # Arrange ascending
+      dplyr::arrange(size) |>
+      # Pivot longer
+      tidyr::pivot_longer(-c(contains("size"), contains("midpoint")),
+        names_to = "sample",
+        values_to = "abundance"
+      ) |>
+      # Nest by sample
+      tidyr::nest(.by = sample) |>
+      # Add cumulative abundance
+      dplyr::mutate(data = purrr::map(data, \(x) dplyr::mutate(x, dplyr::across(abundance, \(x) cumsum(x), .names = "{.col}_cum.p"))))
+
+    # Return data
+    return(data)
   }
-  return(data)
 }
