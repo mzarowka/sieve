@@ -64,34 +64,13 @@ psa_prepare_data <- function(data, unit = "um") {
         size.mm = size / 1000,
         size.um = size,
         size.phi = psa_convert_units(size.mm, unit = "um"),
-        midpoint.mm = find_midpoint(size.mm),
+        midpoint.mm = psa_find_midpoint(size.mm),
         midpoint.um = midpoint.mm * 1000,
-        midpoint.phi = find_midpoint(size.phi),
+        midpoint.phi = psa_find_midpoint(size.phi),
         .after = size.mm,
         .keep = "none"
       )
 
-    # Keep only abundance data
-    sample <- data |>
-      # Select only sample
-      dplyr::select(-size)
-
-    # Bind back
-    data <- dplyr::bind_cols(size, sample) |>
-      # Arrange ascending
-      dplyr::arrange(size) |>
-      # Pivot longer
-      tidyr::pivot_longer(-c(contains("size"), contains("midpoint")),
-        names_to = "sample",
-        values_to = "abundance"
-      ) |>
-      # Nest by sample
-      tidyr::nest(.by = sample) |>
-      # Add cumulative abundance
-      dplyr::mutate(data = purrr::map(data, \(x) dplyr::mutate(x, dplyr::across(abundance, \(x) cumsum(x), .names = "{.col}_cum.p"))))
-
-    # Return data
-    return(data)
   } else if (unit == "phi") {
     # Calculate size variables
     size <- data |>
@@ -99,33 +78,33 @@ psa_prepare_data <- function(data, unit = "um") {
         size.phi = size,
         size.mm = psa_convert_units(size.phi, unit = "phi"),
         size.um = size.mm * 1000,
-        midpoint.mm = find_midpoint(size.mm),
+        midpoint.mm = psa_find_midpoint(size.mm),
         midpoint.um = midpoint.mm * 1000,
-        midpoint.phi = find_midpoint(size.phi),
+        midpoint.phi = fpsa_ind_midpoint(size.phi),
         .after = size,
         .keep = "none"
       )
-
-    # Keep only abundance data
-    sample <- data |>
-      # Select only sample
-      dplyr::select(-size)
-
-    # Bind back
-    data <- dplyr::bind_cols(size, sample) |>
-      # Arrange ascending
-      dplyr::arrange(size) |>
-      # Pivot longer
-      tidyr::pivot_longer(-c(contains("size"), contains("midpoint")),
-        names_to = "sample",
-        values_to = "abundance"
-      ) |>
-      # Nest by sample
-      tidyr::nest(.by = sample) |>
-      # Add cumulative abundance
-      dplyr::mutate(data = purrr::map(data, \(x) dplyr::mutate(x, dplyr::across(abundance, \(x) cumsum(x), .names = "{.col}_cum.p"))))
-
-    # Return data
-    return(data)
   }
+
+  # Keep only abundance data
+  sample <- data |>
+    # Select only sample
+    dplyr::select(-size)
+
+  # Bind back
+  data <- dplyr::bind_cols(size, sample) |>
+    # Arrange ascending
+    dplyr::arrange(size) |>
+    # Pivot longer
+    tidyr::pivot_longer(-c(contains("size"), contains("midpoint")),
+                        names_to = "sample",
+                        values_to = "abundance"
+    ) |>
+    # Nest by sample
+    tidyr::nest(.by = sample) |>
+    # Add cumulative abundance
+    dplyr::mutate(data = purrr::map(data, \(x) dplyr::mutate(x, dplyr::across(abundance, \(x) cumsum(x), .names = "{.col}_cum.p"))))
+
+  # Return data
+  return(data)
 }
