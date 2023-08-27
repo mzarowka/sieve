@@ -149,8 +149,6 @@ psa_calculate_indices <- function(data, method = "all") {
 #'
 #' @return a data frame with calculated indices.
 #' @export
-#'
-#' @examples
 psa_get_indices <- function(data, method = "all"){
   # Check method
   if (!(method %in% c("all", "amm", "lmm", "gmm"))) {
