@@ -94,7 +94,7 @@ psa_prepare_data <- function(data, unit = "um") {
   # Bind back
   data <- dplyr::bind_cols(size, sample) |>
     # Arrange ascending
-    dplyr::arrange(size) |>
+    dplyr::arrange(dplyr::desc(size)) |>
     # Pivot longer
     tidyr::pivot_longer(-c(contains("size"), contains("midpoint")),
                         names_to = "sample",
@@ -103,7 +103,7 @@ psa_prepare_data <- function(data, unit = "um") {
     # Nest by sample
     tidyr::nest(.by = sample) |>
     # Add cumulative abundance
-    dplyr::mutate(data = purrr::map(data, \(x) dplyr::mutate(x, dplyr::across(abundance, \(x) cumsum(x), .names = "{.col}_cum.p"))))
+    dplyr::mutate(data = purrr::map(data, \(x) dplyr::mutate(x, dplyr::across(abundance, \(x) cumsum(x), .names = "{.col}_cum"))))
 
   # Return data
   return(data)
