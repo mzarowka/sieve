@@ -4,12 +4,12 @@
 \alias{psa_calculate_indices}
 \title{Calculate base size indices}
 \usage{
-psa_calculate_indices(data, method = "all")
+psa_calculate_indices(data, method)
 }
 \arguments{
 \item{data}{a tibble prepared with \code{\link{psa_prepare_data}}}
 
-\item{method}{character, one of: arithmetic method of moments ("amm"), logarithmic method of moments ("lmm"), geometric method of moments ("gmm"), Folk and Ward logarithmic ("lfw"), Folk and Ward geometric ("gfw") or all ("all" - default).}
+\item{method}{character, one of: arithmetic method of moments ("amm"), logarithmic method of moments ("lmm"), geometric method of moments ("gmm"), Folk and Ward logarithmic ("lfw"), Folk and Ward geometric ("gfw"), metric quantiles ("umq"), phi quantiles ("phiq") or all ("all" - default).}
 }
 \value{
 a data frame with calculated indices.

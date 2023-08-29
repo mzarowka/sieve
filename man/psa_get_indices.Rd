@@ -9,7 +9,7 @@ psa_get_indices(data, method = "all")
 \arguments{
 \item{data}{nested data prepared with \code{\link{prepare_tibble}}}
 
-\item{method}{one of arithmetic method of moments ("amm"), logarithmic method of moments ("lmm") or Geometric method of moments ("gmm") or all (default).}
+\item{method}{character, one of: arithmetic method of moments ("amm"), logarithmic method of moments ("lmm"), geometric method of moments ("gmm"), Folk and Ward logarithmic ("lfw"), Folk and Ward geometric ("gfw"), metric quantiles ("umq"), phi quantiles ("phiq") or all ("all" - default).}
 }
 \value{
 a data frame with calculated indices.

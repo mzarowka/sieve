@@ -16,12 +16,15 @@ psa_convert_units <- function(size, unit) {
 
   # Convert to phi
   if (unit == "um") {
-    size_phi <- -log2(size)
+    size <- -log2(size/1000)
 
     # Convert to metric
   } else if (unit == "phi") {
-    size_um <- 2^(-size)
+    size <- 2^(-size) * 1000
   }
+
+  # Return
+  return(size)
 }
 
 #' Find class midpoint
@@ -63,7 +66,7 @@ psa_prepare_data <- function(data, unit = "um") {
       dplyr::mutate(
         size.mm = size / 1000,
         size.um = size,
-        size.phi = psa_convert_units(size.mm, unit = "um"),
+        size.phi = psa_convert_units(size.um, unit = "um"),
         midpoint.mm = psa_find_midpoint(size.mm),
         midpoint.um = midpoint.mm * 1000,
         midpoint.phi = psa_find_midpoint(size.phi),
@@ -76,11 +79,11 @@ psa_prepare_data <- function(data, unit = "um") {
     size <- data |>
       dplyr::mutate(
         size.phi = size,
-        size.mm = psa_convert_units(size.phi, unit = "phi"),
-        size.um = size.mm * 1000,
+        size.um = psa_convert_units(size.phi, unit = "phi"),
+        size.mm = size.um / 1000,
         midpoint.mm = psa_find_midpoint(size.mm),
         midpoint.um = midpoint.mm * 1000,
-        midpoint.phi = fpsa_ind_midpoint(size.phi),
+        midpoint.phi = psa_ind_midpoint(size.phi),
         .after = size,
         .keep = "none"
       )
