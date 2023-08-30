@@ -57,13 +57,32 @@ psa_plot_distribution <- function(data, unit = "phi") {
 #' Plot ternary diagrams
 #'
 #' @param data data.
-#' @param triangle which triangle to use.
+#' @param triangle which template (triangle) to use.
 #'
 #' @return ternary diagram of choice.
 #' @export
-psa_plot_ternary <- function(data, triangle){
+psa_plot_ternary <- function(data, template = "ssc"){
+  # Check method
+  if (!(template %in% c("ssc"))) {
+    rlang::abort(cli::format_error("Template not recognized"))
+  }
 
+  # Plot ternary diagram
+  if (template == "ssc"){
+    plot_tern <- ggtern::ggtern(data, aes(clay.p, sand.p, silt.p)) +
+      ggplot2::geom_point() +
+      ggplot2::labs(x = "Clay (%)", y = "Sand (%)", z = "Silt (%)") +
+      ggplot2::theme(panel.background = element_blank(),
+                     panel.grid = element_line(color = "black")) +
+      theme_classic()
+  } else {
+    NULL
+  }
+
+  # Return plot
+  return(plot_tern)
 }
+
 
 #' Plot variable plot types
 #'
